@@ -1,9 +1,9 @@
 import requests
 import urllib.parse
+from cryptography.hazmat.primitives import padding as symmetric_padding
 
 server = "https://ciberseguridad.diplomatura.unc.edu.ar/cripto/cbc-mac/"
 email = "benjamin.picech@mi.unc.edu.ar"
-from cryptography.hazmat.primitives import padding as symmetric_padding
 
 def get_challenge():
     response = requests.get(f"{server}{email}/challenge")
@@ -14,42 +14,44 @@ def get_challenge():
         raise Exception("Error al obtener el desafío")
 
 def send_response(query):
-    encoded_query = urllib.parse.quote(query, safe='=&@<>')
+    encoded_query = urllib.parse.quote(query, safe='=&@%')
     print(f"Query codificada: {encoded_query}")
     response = requests.get(f"{server}{email}/answer?{encoded_query}")
     return response.text
 
-# Función para generar la falsificación
+def pad_message(message, block_size):
+    padder = symmetric_padding.PKCS7(block_size * 8).padder()
+    print(message)
+    padded_data = padder.update(message) + padder.finalize()
+    print(padded_data)
+    return padded_data
+
 def generate_forged_query(challenge):
-    # Extraemos los valores clave
     components = challenge.split("&")
-    original_mac = components[-1].split("=")[1]  # El valor de 'mac'
-    original_query = "&".join(components[:-1])  # La parte del mensaje sin el MAC
+    original_mac = components[-1].split("=")[1]
+    original_query = "&".join(components[:-1])
 
-    # Repetimos la query 10 veces, aplicando XOR en cada primer bloque
     repetitions = 10
-    forged_query = original_query
     mac_bytes = bytes.fromhex(original_mac)
+    block_size = len(mac_bytes)
+    print(original_query)
 
-    # Asumimos que el primer bloque corresponde al tamaño del MAC (tamaño del bloque)
-    query_blocks = forged_query.encode()
-    print(len(query_blocks))
-    print(len(mac_bytes))
-    print(len(query_blocks) % len(mac_bytes))
-    block_size = len(mac_bytes)  # El tamaño de bloque es el mismo que el MAC
-    padder = symmetric_padding.PKCS7(block_size).padder()
-    query_blocks = padder.update(forged_query.encode()) + padder.finalize()
-    forged_blocks = query_blocks
+    query_bytes = original_query.encode()
 
-    # Generamos la falsificación
-    first_block_xor_mac = bytearray(query_blocks[:block_size])  # Tomamos el primer bloque
-    print(len(query_blocks) % block_size)
-    for j in range(block_size):
-        first_block_xor_mac[j] ^= mac_bytes[j]  # XOR con el MAC
+    padded_query = pad_message(query_bytes, block_size)
+
+    first_block_xor_mac = bytearray(padded_query[:block_size])
+    for j in range(min(len(first_block_xor_mac), block_size)):
+        first_block_xor_mac[j] ^= mac_bytes[j]
+
+    forged_blocks = padded_query
     for i in range(repetitions):
-      forged_blocks += first_block_xor_mac + query_blocks[block_size:]
-    # Convertimos los bloques forjados en la query string
-    forged_query = forged_blocks + f"&mac={original_mac}".encode()
+        if(i != repetitions - 1):
+            forged_blocks += first_block_xor_mac + padded_query[block_size:]
+        else:
+            forged_blocks += first_block_xor_mac + query_bytes[block_size:]
+
+    forged_query = forged_blocks + b"&mac=" + original_mac.encode()
     return forged_query
 
 # Obtener el desafío original

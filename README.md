@@ -35,3 +35,24 @@ Ejemplo de texto claro construido:
 
 Ver archivo hash_collision.py
 Dado el la poca cantidad de bits que reprecentan el hash teoricamente deberia costarnos 2^24 operaciones encontrar una colision utilizando la fuerza bruta. Genere un mensaje partiendo de mi email con todos las posibles extenciones de 5 bytes imprimibles y busque conincidencias entre los hashes generados.
+
+## Autenticación
+
+### CBC-MAC
+
+Ver archivo cbc_mac.py
+Para este desafio utilice el conocimiento sobre el CBC-MAC y como se puede explotar la propiedad de que el estado final de CBC se puede considerar un estado intermedio del algoritmo, ademas de que la key y el IV se mantienen iguales en cada llamado al servidor. De la misma forma como se explica en la consigna, tenemos que:
+
+```
+M = M1 || M2 || .. || Mn
+T = CBC-MAC(M)
+```
+
+Podemos generar un mensaje M' tal que:
+
+```
+M' = M || (M1 XOR T) || M2 || .. || Mn || (M1 XOR T) || .. MN
+con CBC-MAC(M') = T
+```
+
+Lo que imlica que podemos reptetir el mensaje original tanto como queramos para alcanzar las transferencias necesarias hacia nuestra cuenta. Tuve que considerar el relleno modo PKCS#7 para generar el mensaje nuevo porque el tamaño del mensaje original no era multiplo del tamaño de bloque.
