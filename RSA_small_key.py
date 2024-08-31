@@ -3,7 +3,6 @@ import json
 import base64
 from Crypto.PublicKey import RSA
 from Crypto.Util.number import inverse, long_to_bytes
-from sympy import factorint
 
 # Recuperados con la herramienta msieve, ver msieve.log
 p = 300653542617790731163576108228308119467
@@ -13,10 +12,6 @@ def get_challenge(email):
     url = f"https://ciberseguridad.diplomatura.unc.edu.ar/cripto/rsa-small/{email}/challenge"
     response = requests.get(url)
     return json.loads(response.text)
-
-def factorize_n(n):
-    factors = factorint(n)
-    return list(factors.keys())
 
 def decrypt_message(ciphertext, n, e, p, q):
     phi = (p - 1) * (q - 1)
