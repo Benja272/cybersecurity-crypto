@@ -56,3 +56,9 @@ con CBC-MAC(M') = T
 ```
 
 Lo que imlica que podemos reptetir el mensaje original tanto como queramos para alcanzar las transferencias necesarias hacia nuestra cuenta. Tuve que considerar el relleno modo PKCS#7 para generar el mensaje nuevo porque el tamaño del mensaje original no era multiplo del tamaño de bloque.
+
+## Clave Publica
+
+### RSA con clave pequeña
+
+Ver el archivo RSA_small_key.py, siguiendo la consigna consegui factorizar n utilizando la herramienta msieve, luego pude calcular la clave privada y con esta desifrar el mensaje.

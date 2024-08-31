@@ -5,6 +5,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Util.number import inverse, long_to_bytes
 from sympy import factorint
 
+# Recuperados con la herramienta msieve, ver msieve.log
 p = 300653542617790731163576108228308119467
 q = 338422795365762647757884077303702508663
 
@@ -35,12 +36,12 @@ def send_answer(email, message):
 
 def main():
     email = "benjamin.picech@mi.unc.edu.ar"
-    
+
     challenge = get_challenge(email)
     ciphertext = challenge['ciphertext']
     n = challenge['publicKey']['n']
     e = challenge['publicKey']['e']
-    
+
     print(f"Ciphertext: {ciphertext}")
     print(f"n: {n}")
     print(f"e: {e}")
@@ -48,7 +49,7 @@ def main():
     decrypted = decrypt_message(ciphertext, n, e, p, q)
     message = remove_pkcs1_padding(decrypted)
     print(f"Decrypted message: {message.decode()}")
-    
+
     # Send the answer
     response = send_answer(email, message)
     print(f"Server response: {response}")
